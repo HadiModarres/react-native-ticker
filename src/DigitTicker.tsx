@@ -9,10 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const CELL_HEIGHT = 40;
-
-type DigitTickerProps = {
-  children: number;
-};
+type Direction = 'up' | 'down';
 
 type TickerBar = {
   name: string;
@@ -29,19 +26,33 @@ const getTickerBarInitialTranslation = (tickerBar: TickerBar): number => {
 
 const getTickerBarTargetTranslation = (
   tickerBar: TickerBar,
-  target: number
+  target: number,
+  direction: Direction
 ): number => {
-  return -tickerBar.numberList.indexOf(target) * CELL_HEIGHT;
+  if (direction === 'up') {
+    return -tickerBar.numberList.indexOf(target) * CELL_HEIGHT;
+  } else {
+    return (
+      -tickerBar.numberList.findLastIndex((n) => n === target) * CELL_HEIGHT
+    );
+  }
 };
 
 const getBarNubmersForSourceNumber = (source: number): number[] => {
   const upper = source + 10;
-  const bottom = source;
+  const lower = source - 9;
 
-  return range(bottom, upper).map((n) => n % 10);
+  return range(lower + 10, upper + 10)
+    .reverse()
+    .map((n) => n % 10);
 };
 
-export const DigitTicker = ({ children }: DigitTickerProps) => {
+type DigitTickerProps = {
+  children: number;
+  direction: Direction;
+};
+
+export const DigitTicker = ({ children, direction }: DigitTickerProps) => {
   const [tickerBar1, setTickerBar1] = useState<TickerBar>({
     name: 'bar-1',
     source: 0,
@@ -66,12 +77,14 @@ export const DigitTicker = ({ children }: DigitTickerProps) => {
 
   const bar1AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bar1Translate.value }],
+    width: 40,
     opacity: tickerBar1.showing ? 255 : 0,
     position: 'absolute',
   }));
 
   const bar2AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bar2Translate.value }],
+    width: 40,
     opacity: tickerBar2.showing ? 255 : 0,
     position: 'absolute',
   }));
@@ -145,7 +158,8 @@ export const DigitTicker = ({ children }: DigitTickerProps) => {
         animating: true,
       }));
 
-      getTranslation(getOtherBar(showingBar).name).value = 0;
+      getTranslation(getOtherBar(showingBar).name).value =
+        getTickerBarInitialTranslation(getOtherBar(showingBar));
       getNonShowingBarSetter()((bar) => ({
         ...bar,
         showing: false,
@@ -153,29 +167,12 @@ export const DigitTicker = ({ children }: DigitTickerProps) => {
         numberList: getBarNubmersForSourceNumber(children),
       }));
 
-      // console.log(
-      //   'moving to ' + getTickerBarTargetTranslation(showingBar, children)
-      // );
-      // console.log(showingBar);
-
       getTranslation(showingBar.name).value = withTiming(
-        getTickerBarTargetTranslation(showingBar, children),
+        getTickerBarTargetTranslation(showingBar, children, direction),
         { duration: 400 },
         () => {
           runOnJS(setNonShowingBar)(true);
           runOnJS(setShowingBar)(false, false);
-          // runOnJS(() => {
-          //   getShowingBarSetter()((bar) => ({
-          //     ...bar,
-          //     showing: false,
-          //     animating: false,
-          //   }));
-
-          //   getNonShowingBarSetter()((bar) => ({
-          //     ...bar,
-          //     showing: true,
-          //   }));
-          // });
         }
       );
     }
@@ -187,22 +184,24 @@ export const DigitTicker = ({ children }: DigitTickerProps) => {
     bar2AnimatedStyle,
     bar1Translate,
     bar2Translate,
+    direction,
   ]);
 
   return (
     <View
       style={{
         height: 40,
-        width: 40,
-        borderColor: 'purple',
+        width: 50,
+        borderColor: 'green',
         borderWidth: 1,
+        // flexDirection: 'row',
         overflow: 'hidden',
       }}
     >
       <Animated.View style={bar1AnimatedStyle}>
-        {tickerBar1.numberList.map((i) => (
+        {tickerBar1.numberList.map((i, index) => (
           <View
-            key={'bar-1' + i}
+            key={'bar-1' + index}
             style={{
               height: 40,
               borderColor: 'red',
@@ -217,9 +216,9 @@ export const DigitTicker = ({ children }: DigitTickerProps) => {
       </Animated.View>
 
       <Animated.View style={bar2AnimatedStyle}>
-        {tickerBar2.numberList.map((i) => (
+        {tickerBar2.numberList.map((i, index) => (
           <View
-            key={'bar-2' + i}
+            key={'bar-2' + index}
             style={{
               height: 40,
               borderColor: 'blue',

@@ -6,7 +6,7 @@ import { DigitTicker } from 'react-native-bob-library';
 export default function App() {
   return (
     <View style={styles.container}>
-      <DigitTicker>{8}</DigitTicker>
+      <DigitTicker direction="up">{7}</DigitTicker>
     </View>
   );
 }
