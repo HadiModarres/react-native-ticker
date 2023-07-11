@@ -1,5 +1,6 @@
 import range from 'lodash.range';
 import React, { useEffect, useState } from 'react';
+import type { TextStyle } from 'react-native';
 import { Text, View } from 'react-native';
 import Animated, {
   runOnJS,
@@ -8,7 +9,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const CELL_HEIGHT = 40;
 export type Direction = 'up' | 'down';
 
 type TickerBar = {
@@ -20,20 +20,24 @@ type TickerBar = {
   numberList: number[];
 };
 
-const getTickerBarInitialTranslation = (tickerBar: TickerBar): number => {
-  return -tickerBar.numberList.indexOf(tickerBar.source) * CELL_HEIGHT;
+const getTickerBarInitialTranslation = (
+  tickerBar: TickerBar,
+  cellHeight: number
+): number => {
+  return -tickerBar.numberList.indexOf(tickerBar.source) * cellHeight;
 };
 
 const getTickerBarTargetTranslation = (
   tickerBar: TickerBar,
   target: number,
-  direction: Direction
+  direction: Direction,
+  cellHeight: number
 ): number => {
   if (direction === 'up') {
-    return -tickerBar.numberList.indexOf(target) * CELL_HEIGHT;
+    return -tickerBar.numberList.indexOf(target) * cellHeight;
   } else {
     return (
-      -tickerBar.numberList.findLastIndex((n) => n === target) * CELL_HEIGHT
+      -tickerBar.numberList.findLastIndex((n) => n === target) * cellHeight
     );
   }
 };
@@ -51,13 +55,17 @@ type DigitTickerProps = {
   children: number;
   direction: Direction;
   measurements: { width: number; height: number };
+  textStyle?: TextStyle;
 };
 
 export const DigitTicker = ({
   children,
   direction,
   measurements,
+  textStyle,
 }: DigitTickerProps) => {
+  const { height, width } = measurements;
+
   const [tickerBar1, setTickerBar1] = useState<TickerBar>({
     name: 'bar-1',
     source: 0,
@@ -73,23 +81,23 @@ export const DigitTicker = ({
   });
 
   const bar1Translate = useSharedValue(
-    getTickerBarInitialTranslation(tickerBar1)
+    getTickerBarInitialTranslation(tickerBar1, height)
   );
 
   const bar2Translate = useSharedValue(
-    getTickerBarInitialTranslation(tickerBar2)
+    getTickerBarInitialTranslation(tickerBar2, height)
   );
 
   const bar1AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bar1Translate.value }],
-    width: measurements.width,
+    width,
     opacity: tickerBar1.showing ? 255 : 0,
     position: 'absolute',
   }));
 
   const bar2AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bar2Translate.value }],
-    width: measurements.width,
+    width,
     opacity: tickerBar2.showing ? 255 : 0,
     position: 'absolute',
   }));
@@ -164,7 +172,7 @@ export const DigitTicker = ({
       }));
 
       getTranslation(getOtherBar(showingBar).name).value =
-        getTickerBarInitialTranslation(getOtherBar(showingBar));
+        getTickerBarInitialTranslation(getOtherBar(showingBar), height);
       getNonShowingBarSetter()((bar) => ({
         ...bar,
         showing: false,
@@ -173,7 +181,7 @@ export const DigitTicker = ({
       }));
 
       getTranslation(showingBar.name).value = withTiming(
-        getTickerBarTargetTranslation(showingBar, children, direction),
+        getTickerBarTargetTranslation(showingBar, children, direction, height),
         { duration: 700 },
         () => {
           runOnJS(setNonShowingBar)(true);
@@ -190,12 +198,13 @@ export const DigitTicker = ({
     bar1Translate,
     bar2Translate,
     direction,
+    height,
   ]);
 
   return (
     <View
       style={{
-        height: 40,
+        height: height,
         width: measurements.width,
         borderColor: 'green',
         borderWidth: 0,
@@ -207,14 +216,14 @@ export const DigitTicker = ({
           <View
             key={'bar-1' + index}
             style={{
-              height: 40,
+              height,
               borderColor: 'red',
               borderWidth: 0,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text>{i}</Text>
+            <Text style={textStyle}>{i}</Text>
           </View>
         ))}
       </Animated.View>
@@ -224,14 +233,14 @@ export const DigitTicker = ({
           <View
             key={'bar-2' + index}
             style={{
-              height: 40,
+              height,
               borderColor: 'blue',
               borderWidth: 0,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text>{i}</Text>
+            <Text style={textStyle}>{i}</Text>
           </View>
         ))}
       </Animated.View>

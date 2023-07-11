@@ -2,15 +2,21 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DigitTicker, type Direction } from './DigitTicker';
 import { Text, View } from 'react-native';
 import range from 'lodash.range';
+import type { TextStyle } from 'react-native';
 
 type MeasureMap = Record<string, { width: number; height: number }>;
 
 type TickerProps = {
   children: string;
   digitWidth?: 'per-digit' | 'max-digit-width';
+  textStyle?: TextStyle;
 };
 
-export const Ticker = ({ children, digitWidth = 'per-digit' }: TickerProps) => {
+export const Ticker = ({
+  children,
+  textStyle,
+  digitWidth = 'per-digit',
+}: TickerProps) => {
   const [currentNumber, setCurrentNumber] = useState(children);
   const [direction, setDirection] = useState<Direction>('up');
   const measureMap = useRef<MeasureMap>({});
@@ -41,11 +47,14 @@ export const Ticker = ({ children, digitWidth = 'per-digit' }: TickerProps) => {
 
   return (
     <View>
-      <View style={{ flexDirection: 'row' }}>
+      <View
+        style={{ flexDirection: 'row', borderColor: 'green', borderWidth: 0 }}
+      >
         {digitsMeasured &&
           maxDimensions &&
           digits.map((d, index) => (
             <DigitTicker
+              textStyle={textStyle}
               measurements={{
                 height: maxDimensions.height,
                 width:
@@ -60,21 +69,24 @@ export const Ticker = ({ children, digitWidth = 'per-digit' }: TickerProps) => {
             </DigitTicker>
           ))}
       </View>
-      <Text>{children}</Text>
+      {/* <Text style={textStyle}>{children}</Text> */}
 
-      <View style={{ backgroundColor: 'red', flex: 0, opacity: 0 }}>
+      <View style={{ opacity: 0 }}>
         {range(0, 10).map((digit) => (
           <Text
-            style={{
-              flex: 0,
-              marginRight: 'auto',
-              borderColor: 'blue',
-              borderWidth: 0,
-            }}
+            style={[
+              {
+                marginRight: 'auto',
+              },
+              textStyle,
+            ]}
             key={digit}
             onLayout={(event) => {
               const { width, height } = event.nativeEvent.layout;
-              measureMap.current[digit] = { width, height: Math.ceil(height) };
+              measureMap.current[digit] = {
+                width,
+                height: Math.ceil(height),
+              };
               if (Object.keys(measureMap.current).length === 10) {
                 setDigitsMeasured(true);
               }
