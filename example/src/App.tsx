@@ -1,12 +1,12 @@
 import * as React from 'react';
 
 import { StyleSheet, View } from 'react-native';
-import { DigitTicker } from 'react-native-bob-library';
+import { Ticker } from 'react-native-bob-library';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <DigitTicker direction="up">{7}</DigitTicker>
+      <Ticker>32226</Ticker>
     </View>
   );
 }
@@ -16,10 +16,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
   },
 });

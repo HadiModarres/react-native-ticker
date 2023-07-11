@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const CELL_HEIGHT = 40;
-type Direction = 'up' | 'down';
+export type Direction = 'up' | 'down';
 
 type TickerBar = {
   name: string;
@@ -50,9 +50,14 @@ const getBarNubmersForSourceNumber = (source: number): number[] => {
 type DigitTickerProps = {
   children: number;
   direction: Direction;
+  measurements: { width: number; height: number };
 };
 
-export const DigitTicker = ({ children, direction }: DigitTickerProps) => {
+export const DigitTicker = ({
+  children,
+  direction,
+  measurements,
+}: DigitTickerProps) => {
   const [tickerBar1, setTickerBar1] = useState<TickerBar>({
     name: 'bar-1',
     source: 0,
@@ -77,14 +82,14 @@ export const DigitTicker = ({ children, direction }: DigitTickerProps) => {
 
   const bar1AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bar1Translate.value }],
-    width: 40,
+    width: measurements.width,
     opacity: tickerBar1.showing ? 255 : 0,
     position: 'absolute',
   }));
 
   const bar2AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bar2Translate.value }],
-    width: 40,
+    width: measurements.width,
     opacity: tickerBar2.showing ? 255 : 0,
     position: 'absolute',
   }));
@@ -169,7 +174,7 @@ export const DigitTicker = ({ children, direction }: DigitTickerProps) => {
 
       getTranslation(showingBar.name).value = withTiming(
         getTickerBarTargetTranslation(showingBar, children, direction),
-        { duration: 400 },
+        { duration: 700 },
         () => {
           runOnJS(setNonShowingBar)(true);
           runOnJS(setShowingBar)(false, false);
@@ -191,10 +196,9 @@ export const DigitTicker = ({ children, direction }: DigitTickerProps) => {
     <View
       style={{
         height: 40,
-        width: 50,
+        width: measurements.width,
         borderColor: 'green',
-        borderWidth: 1,
-        // flexDirection: 'row',
+        borderWidth: 0,
         overflow: 'hidden',
       }}
     >
