@@ -6,7 +6,7 @@ import { Ticker } from 'react-native-bob-library';
 export default function App() {
   return (
     <View style={styles.container}>
-      <Ticker>32226</Ticker>
+      <Ticker digitWidth="per-digit">31</Ticker>
     </View>
   );
 }

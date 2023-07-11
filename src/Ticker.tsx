@@ -7,9 +7,10 @@ type MeasureMap = Record<string, { width: number; height: number }>;
 
 type TickerProps = {
   children: string;
+  digitWidth?: 'per-digit' | 'max-digit-width';
 };
 
-export const Ticker = ({ children }: TickerProps) => {
+export const Ticker = ({ children, digitWidth = 'per-digit' }: TickerProps) => {
   const [currentNumber, setCurrentNumber] = useState(children);
   const [direction, setDirection] = useState<Direction>('up');
   const measureMap = useRef<MeasureMap>({});
@@ -26,13 +27,32 @@ export const Ticker = ({ children }: TickerProps) => {
     }
   }, [children, currentNumber]);
 
+  const maxDimensions = useMemo(() => {
+    if (!digitsMeasured) {
+      return undefined;
+    }
+    return {
+      width: Math.max(...Object.values(measureMap.current).map((m) => m.width)),
+      height: Math.max(
+        ...Object.values(measureMap.current).map((m) => m.height)
+      ),
+    };
+  }, [digitsMeasured]);
+
   return (
     <View>
       <View style={{ flexDirection: 'row' }}>
         {digitsMeasured &&
+          maxDimensions &&
           digits.map((d, index) => (
             <DigitTicker
-              measurements={measureMap.current[d]!}
+              measurements={{
+                height: maxDimensions.height,
+                width:
+                  digitWidth === 'max-digit-width'
+                    ? maxDimensions.width
+                    : measureMap.current[d]!.width,
+              }}
               key={String(index)}
               direction={direction}
             >
@@ -53,12 +73,9 @@ export const Ticker = ({ children }: TickerProps) => {
             }}
             key={digit}
             onLayout={(event) => {
-              console.log('measured');
               const { width, height } = event.nativeEvent.layout;
               measureMap.current[digit] = { width, height: Math.ceil(height) };
               if (Object.keys(measureMap.current).length === 10) {
-                console.log('all measured');
-                console.log(measureMap.current);
                 setDigitsMeasured(true);
               }
             }}
