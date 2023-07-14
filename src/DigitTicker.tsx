@@ -195,7 +195,7 @@ export const DigitTicker = ({
 
       getTranslation(showingBar.name).value = withTiming(
         getTickerBarTargetTranslation(showingBar, children, direction, height),
-        { duration: 2000 },
+        { duration: 600 },
         () => {
           runOnJS(setNonShowingBar)(true);
           runOnJS(setShowingBar)(false, false);
