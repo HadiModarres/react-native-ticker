@@ -1,5 +1,5 @@
 import range from 'lodash.range';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { TextStyle } from 'react-native';
 import { Text, View } from 'react-native';
 import Animated, {
@@ -102,62 +102,74 @@ export const DigitTicker = ({
     position: 'absolute',
   }));
 
+  const {
+    getNonShowingBarSetter,
+    getOtherBar,
+    getShowingBar,
+    getShowingBarSetter,
+    setNonShowingBar,
+    setShowingBar,
+  } = useMemo(() => {
+    return {
+      getShowingBar: (): TickerBar => {
+        if (tickerBar1.showing) {
+          return tickerBar1;
+        } else {
+          return tickerBar2;
+        }
+      },
+
+      getOtherBar: (tickerBar: TickerBar) => {
+        if (tickerBar.name === 'bar-1') {
+          return tickerBar2;
+        } else {
+          return tickerBar1;
+        }
+      },
+      getShowingBarSetter: () => {
+        if (tickerBar1.showing) {
+          return setTickerBar1;
+        } else {
+          return setTickerBar2;
+        }
+      },
+      getNonShowingBarSetter: () => {
+        if (!tickerBar1.showing) {
+          return setTickerBar1;
+        } else {
+          return setTickerBar2;
+        }
+      },
+
+      setShowingBar: (showing: boolean, animating: boolean) => {
+        getShowingBarSetter()((bar) => ({
+          ...bar,
+          showing,
+          animating,
+        }));
+      },
+      setNonShowingBar: (showing: boolean) => {
+        getNonShowingBarSetter()((bar) => ({
+          ...bar,
+          showing,
+        }));
+      },
+    };
+  }, [tickerBar1, tickerBar2]);
+
+  const { getTranslation } = useMemo(() => {
+    return {
+      getTranslation: (tickerBarName: string) => {
+        if (tickerBarName === 'bar-1') {
+          return bar1Translate;
+        } else {
+          return bar2Translate;
+        }
+      },
+    };
+  }, [bar1Translate, bar2Translate]);
+
   useEffect(() => {
-    const getShowingBar = (): TickerBar => {
-      if (tickerBar1.showing) {
-        return tickerBar1;
-      } else {
-        return tickerBar2;
-      }
-    };
-
-    const getOtherBar = (tickerBar: TickerBar) => {
-      if (tickerBar.name === 'bar-1') {
-        return tickerBar2;
-      } else {
-        return tickerBar1;
-      }
-    };
-
-    const getTranslation = (tickerBarName: string) => {
-      if (tickerBarName === 'bar-1') {
-        return bar1Translate;
-      } else {
-        return bar2Translate;
-      }
-    };
-
-    const getShowingBarSetter = () => {
-      if (tickerBar1.showing) {
-        return setTickerBar1;
-      } else {
-        return setTickerBar2;
-      }
-    };
-
-    const getNonShowingBarSetter = () => {
-      if (!tickerBar1.showing) {
-        return setTickerBar1;
-      } else {
-        return setTickerBar2;
-      }
-    };
-
-    const setShowingBar = (showing: boolean, animating: boolean) => {
-      getShowingBarSetter()((bar) => ({
-        ...bar,
-        showing,
-        animating,
-      }));
-    };
-
-    const setNonShowingBar = (showing: boolean) => {
-      getNonShowingBarSetter()((bar) => ({
-        ...bar,
-        showing,
-      }));
-    };
-
     const showingBar = getShowingBar();
 
     if (showingBar.animating) {
@@ -173,6 +185,7 @@ export const DigitTicker = ({
 
       getTranslation(getOtherBar(showingBar).name).value =
         getTickerBarInitialTranslation(getOtherBar(showingBar), height);
+
       getNonShowingBarSetter()((bar) => ({
         ...bar,
         showing: false,
@@ -191,14 +204,15 @@ export const DigitTicker = ({
     }
   }, [
     children,
-    tickerBar1,
-    tickerBar2,
-    bar1AnimatedStyle,
-    bar2AnimatedStyle,
-    bar1Translate,
-    bar2Translate,
     direction,
+    getNonShowingBarSetter,
+    getOtherBar,
+    getShowingBar,
+    getShowingBarSetter,
+    getTranslation,
     height,
+    setNonShowingBar,
+    setShowingBar,
   ]);
 
   return (
