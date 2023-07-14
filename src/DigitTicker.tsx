@@ -195,7 +195,7 @@ export const DigitTicker = ({
 
       getTranslation(showingBar.name).value = withTiming(
         getTickerBarTargetTranslation(showingBar, children, direction, height),
-        { duration: 700 },
+        { duration: 2000 },
         () => {
           runOnJS(setNonShowingBar)(true);
           runOnJS(setShowingBar)(false, false);
@@ -220,8 +220,6 @@ export const DigitTicker = ({
       style={{
         height: height,
         width: measurements.width,
-        borderColor: 'green',
-        borderWidth: 0,
         overflow: 'hidden',
       }}
     >
@@ -231,8 +229,6 @@ export const DigitTicker = ({
             key={'bar-1' + index}
             style={{
               height,
-              borderColor: 'red',
-              borderWidth: 0,
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -248,8 +244,6 @@ export const DigitTicker = ({
             key={'bar-2' + index}
             style={{
               height,
-              borderColor: 'blue',
-              borderWidth: 0,
               alignItems: 'center',
               justifyContent: 'center',
             }}

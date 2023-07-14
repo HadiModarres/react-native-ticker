@@ -1,7 +1,7 @@
 {
-  "name": "react-native-bob-library",
+  "name": "@hmodarres/react-native-ticker",
   "version": "0.1.0",
-  "description": "bob",
+  "description": "A ticker component for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -37,16 +37,22 @@
   },
   "keywords": [
     "react-native",
-    "ios",
-    "android"
+    "ticker",
+    "counter",
+    "score",
+    "reanimated",
+    "animated",
+    "react",
+    "native",
+    "expo"  
   ],
-  "repository": "https://github.com/HadiModarres/react-native-bob-library",
-  "author": "Hadi Modarres <modarres.zadeh@gmail.com> (https://github.com/HadiModarres)",
+  "repository": "https://github.com/HadiModarres/react-native-ticker",
+  "author": "Hadi Modarres (https://github.com/HadiModarres)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/HadiModarres/react-native-bob-library/issues"
+    "url": "https://github.com/HadiModarres/react-native-ticker/issues"
   },
-  "homepage": "https://github.com/HadiModarres/react-native-bob-library#readme",
+  "homepage": "https://github.com/HadiModarres/react-native-ticker#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

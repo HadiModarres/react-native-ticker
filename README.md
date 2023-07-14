@@ -1,31 +1,55 @@
-# react-native-bob-library
+![media](./media/example.gif)
 
-bob
+## Description
+A ticker component for react native. 
+
+- Performant
+- Configurable
+- Ticker animates upwards when new number is greater than previous number and down if it's less
+
+This package requires installation of [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation).
 
 ## Installation
-
-```sh
-npm install react-native-bob-library
+```
+npm install --save @hmodarres/react-native-ticker
+or
+yarn add @hmodarres/react-native-ticker
 ```
 
 ## Usage
+react-native-ticker supports a single child text string or number
 
-```js
-import { multiply } from 'react-native-bob-library';
+```
+import * as React from 'react';
 
-// ...
+import { StyleSheet, View } from 'react-native';
+import { Ticker } from '@hmodarres/react-native-ticker';
 
-const result = await multiply(3, 7);
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <Ticker
+        textStyle={{ fontSize: 48, fontWeight: '700', color: 'red' }}
+        digitWidth="per-digit"
+      >
+        332
+      </Ticker>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  tickerTextStyle: {},
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
 ```
 
-## Contributing
-
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
 ## License
-
-MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+[MIT License](https://opensource.org/licenses/MIT)
