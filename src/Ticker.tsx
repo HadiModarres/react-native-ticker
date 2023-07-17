@@ -1,13 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { DigitTicker, type Direction } from './DigitTicker';
+import {
+  DigitTicker,
+  type DigitTickerProps,
+  type Direction,
+} from './DigitTicker';
 import { Text, View } from 'react-native';
 import range from 'lodash.range';
 import type { TextStyle } from 'react-native';
-import type { ViewProps } from 'react-native';
 
 type MeasureMap = Record<string, { width: number; height: number }>;
 
-type TickerProps = Omit<ViewProps, 'children'> & {
+type TickerProps = Pick<DigitTickerProps, 'animation'> & {
   children: string | number;
 
   /**
@@ -19,6 +22,7 @@ type TickerProps = Omit<ViewProps, 'children'> & {
    * max-digit-width: All digits take the width of the widest digit, this makes widths of strings with same length the same.
    */
   digitWidth?: 'per-digit' | 'max-digit-width';
+
   textStyle?: TextStyle;
 };
 
@@ -26,6 +30,7 @@ export const Ticker = ({
   children,
   textStyle,
   digitWidth = 'per-digit',
+  animation,
 }: TickerProps) => {
   if (children == null) {
     throw Error('provide a number as children e.g. <Ticker>123</Ticker>');
@@ -84,6 +89,7 @@ export const Ticker = ({
               }}
               key={String(index)}
               direction={direction}
+              animation={animation}
             >
               {parseInt(d, 10)}
             </DigitTicker>

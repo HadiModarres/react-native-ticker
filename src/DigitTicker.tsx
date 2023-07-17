@@ -6,6 +6,9 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  type WithSpringConfig,
+  type WithTimingConfig,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -51,11 +54,14 @@ const getBarNubmersForSourceNumber = (source: number): number[] => {
     .map((n) => n % 10);
 };
 
-type DigitTickerProps = {
+export type DigitTickerProps = {
   children: number;
   direction: Direction;
   measurements: { width: number; height: number };
   textStyle?: TextStyle;
+  animation?:
+    | { type: 'timing'; animationConfig: WithTimingConfig }
+    | { type: 'spring'; animationConfig: WithSpringConfig };
 };
 
 export const DigitTicker = ({
@@ -63,6 +69,7 @@ export const DigitTicker = ({
   direction,
   measurements,
   textStyle,
+  animation = { type: 'timing', animationConfig: { duration: 600 } },
 }: DigitTickerProps) => {
   const { height, width } = measurements;
 
@@ -193,17 +200,39 @@ export const DigitTicker = ({
         numberList: getBarNubmersForSourceNumber(children),
       }));
 
-      getTranslation(showingBar.name).value = withTiming(
-        getTickerBarTargetTranslation(showingBar, children, direction, height),
-        { duration: 600 },
-        () => {
-          runOnJS(setNonShowingBar)(true);
-          runOnJS(setShowingBar)(false, false);
-        }
-      );
+      if (animation.type === 'spring') {
+        getTranslation(showingBar.name).value = withSpring(
+          getTickerBarTargetTranslation(
+            showingBar,
+            children,
+            direction,
+            height
+          ),
+          {},
+          () => {
+            runOnJS(setNonShowingBar)(true);
+            runOnJS(setShowingBar)(false, false);
+          }
+        );
+      } else {
+        getTranslation(showingBar.name).value = withTiming(
+          getTickerBarTargetTranslation(
+            showingBar,
+            children,
+            direction,
+            height
+          ),
+          {},
+          () => {
+            runOnJS(setNonShowingBar)(true);
+            runOnJS(setShowingBar)(false, false);
+          }
+        );
+      }
     }
   }, [
     children,
+    animation,
     direction,
     getNonShowingBarSetter,
     getOtherBar,

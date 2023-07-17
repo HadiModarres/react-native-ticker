@@ -1,6 +1,7 @@
 {
   "name": "@hmodarres/react-native-ticker",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "private": false,
   "description": "A ticker component for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -54,7 +55,8 @@
   },
   "homepage": "https://github.com/HadiModarres/react-native-ticker#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",

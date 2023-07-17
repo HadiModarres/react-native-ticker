@@ -1,9 +1,9 @@
 import * as React from 'react';
 
 import { StyleSheet, View } from 'react-native';
-import { Ticker } from 'react-native-bob-library';
+import { Ticker } from '@hmodarres/react-native-ticker';
 
-const currentNum = 332;
+const currentNum = 443193432;
 
 export default function App() {
   return (
@@ -11,6 +11,7 @@ export default function App() {
       <Ticker
         textStyle={{ fontSize: 48, fontWeight: '700', color: 'red' }}
         digitWidth="per-digit"
+        animation={{ type: 'timing', animationConfig: { duration: 600 } }}
       >
         {currentNum}
       </Ticker>

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "react-native-bob-library": ["./src/index"]
+      "@hmodarres/react-native-ticker": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
