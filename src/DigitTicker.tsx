@@ -69,7 +69,7 @@ export const DigitTicker = ({
   direction,
   measurements,
   textStyle,
-  animation = { type: 'timing', animationConfig: { duration: 600 } },
+  animation = { type: 'timing', animationConfig: { duration: 700 } },
 }: DigitTickerProps) => {
   const { height, width } = measurements;
 
@@ -200,35 +200,37 @@ export const DigitTicker = ({
         numberList: getBarNubmersForSourceNumber(children),
       }));
 
-      if (animation.type === 'spring') {
-        getTranslation(showingBar.name).value = withSpring(
-          getTickerBarTargetTranslation(
-            showingBar,
-            children,
-            direction,
-            height
-          ),
-          {},
-          () => {
-            runOnJS(setNonShowingBar)(true);
-            runOnJS(setShowingBar)(false, false);
-          }
-        );
-      } else {
-        getTranslation(showingBar.name).value = withTiming(
-          getTickerBarTargetTranslation(
-            showingBar,
-            children,
-            direction,
-            height
-          ),
-          {},
-          () => {
-            runOnJS(setNonShowingBar)(true);
-            runOnJS(setShowingBar)(false, false);
-          }
-        );
-      }
+      setTimeout(() => {
+        if (animation.type === 'spring') {
+          getTranslation(showingBar.name).value = withSpring(
+            getTickerBarTargetTranslation(
+              showingBar,
+              children,
+              direction,
+              height
+            ),
+            animation.animationConfig,
+            () => {
+              runOnJS(setNonShowingBar)(true);
+              runOnJS(setShowingBar)(false, false);
+            }
+          );
+        } else {
+          getTranslation(showingBar.name).value = withTiming(
+            getTickerBarTargetTranslation(
+              showingBar,
+              children,
+              direction,
+              height
+            ),
+            animation.animationConfig,
+            () => {
+              runOnJS(setNonShowingBar)(true);
+              runOnJS(setShowingBar)(false, false);
+            }
+          );
+        }
+      }, 0);
     }
   }, [
     children,
