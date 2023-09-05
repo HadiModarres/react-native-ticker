@@ -1,5 +1,5 @@
 import range from 'lodash.range';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import type { TextStyle } from 'react-native';
 import { Text, View } from 'react-native';
 import Animated, {
@@ -73,17 +73,23 @@ export const DigitTicker = ({
 }: DigitTickerProps) => {
   const { height, width } = measurements;
 
+  const widthSharedValue = useSharedValue(width);
+
+  useEffect(() => {
+    widthSharedValue.value = withTiming(width);
+  }, [width, widthSharedValue]);
+
   const [tickerBar1, setTickerBar1] = useState<TickerBar>({
     name: 'bar-1',
-    source: 0,
-    numberList: getBarNubmersForSourceNumber(0),
+    source: children,
+    numberList: getBarNubmersForSourceNumber(children),
     showing: true,
   });
 
   const [tickerBar2, setTickerBar2] = useState<TickerBar>({
     name: 'bar-2',
-    source: 0,
-    numberList: getBarNubmersForSourceNumber(0),
+    source: children,
+    numberList: getBarNubmersForSourceNumber(children),
     showing: false,
   });
 
@@ -177,6 +183,8 @@ export const DigitTicker = ({
   }, [bar1Translate, bar2Translate]);
 
   useEffect(() => {
+    console.log('running use effect');
+
     const showingBar = getShowingBar();
 
     if (showingBar.animating) {
@@ -184,6 +192,7 @@ export const DigitTicker = ({
     }
 
     if (showingBar.source !== children) {
+      console.log('inside');
       getShowingBarSetter()((bar) => ({
         ...bar,
         target: children,
@@ -200,37 +209,37 @@ export const DigitTicker = ({
         numberList: getBarNubmersForSourceNumber(children),
       }));
 
-      setTimeout(() => {
-        if (animation.type === 'spring') {
-          getTranslation(showingBar.name).value = withSpring(
-            getTickerBarTargetTranslation(
-              showingBar,
-              children,
-              direction,
-              height
-            ),
-            animation.animationConfig,
-            () => {
-              runOnJS(setNonShowingBar)(true);
-              runOnJS(setShowingBar)(false, false);
-            }
-          );
-        } else {
-          getTranslation(showingBar.name).value = withTiming(
-            getTickerBarTargetTranslation(
-              showingBar,
-              children,
-              direction,
-              height
-            ),
-            animation.animationConfig,
-            () => {
-              runOnJS(setNonShowingBar)(true);
-              runOnJS(setShowingBar)(false, false);
-            }
-          );
-        }
-      }, 0);
+      // setTimeout(() => {
+      if (animation.type === 'spring') {
+        getTranslation(showingBar.name).value = withSpring(
+          getTickerBarTargetTranslation(
+            showingBar,
+            children,
+            direction,
+            height
+          ),
+          animation.animationConfig,
+          () => {
+            runOnJS(setNonShowingBar)(true);
+            runOnJS(setShowingBar)(false, false);
+          }
+        );
+      } else {
+        getTranslation(showingBar.name).value = withTiming(
+          getTickerBarTargetTranslation(
+            showingBar,
+            children,
+            direction,
+            height
+          ),
+          animation.animationConfig,
+          () => {
+            runOnJS(setNonShowingBar)(true);
+            runOnJS(setShowingBar)(false, false);
+          }
+        );
+      }
+      // }, 0);
     }
   }, [
     children,
@@ -246,6 +255,12 @@ export const DigitTicker = ({
     setShowingBar,
   ]);
 
+  // const containerAnimatedStyle = useAnimatedStyle(() => ({
+  //   height,
+  //   width: widthSharedValue.value,
+  //   overflow: 'hidden',
+  // }));
+
   return (
     <View
       style={{
@@ -253,36 +268,51 @@ export const DigitTicker = ({
         width: measurements.width,
         overflow: 'hidden',
       }}
+      // style={containerAnimatedStyle}
     >
       <Animated.View style={bar1AnimatedStyle}>
-        {tickerBar1.numberList.map((i, index) => (
-          <View
-            key={'bar-1' + index}
-            style={{
-              height,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={textStyle}>{i}</Text>
-          </View>
-        ))}
+        <Bar
+          numberList={tickerBar1.numberList}
+          height={height}
+          textStyle={textStyle}
+        />
       </Animated.View>
 
       <Animated.View style={bar2AnimatedStyle}>
-        {tickerBar2.numberList.map((i, index) => (
-          <View
-            key={'bar-2' + index}
-            style={{
-              height,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={textStyle}>{i}</Text>
-          </View>
-        ))}
+        <Bar
+          numberList={tickerBar2.numberList}
+          height={height}
+          textStyle={textStyle}
+        />
       </Animated.View>
     </View>
   );
 };
+
+type BarProps = {
+  textStyle?: TextStyle;
+  numberList: number[];
+  height: number;
+};
+const Bar = memo(
+  ({ numberList, textStyle, height }: BarProps) => {
+    console.log('rendering number list');
+    return (
+      <>
+        {numberList.map((i, index) => (
+          <View
+            key={'bar' + index}
+            style={{
+              height,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={textStyle}>{i}</Text>
+          </View>
+        ))}
+      </>
+    );
+  },
+  (prev, next) => prev.numberList[0] === next.numberList[0]
+);

@@ -1,12 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  DigitTicker,
-  type DigitTickerProps,
-  type Direction,
-} from './DigitTicker';
+import { type DigitTickerProps } from './DigitTicker';
 import { Text, View } from 'react-native';
 import range from 'lodash.range';
 import type { TextStyle } from 'react-native';
+import { DigitTicker3 } from './DigitTicker3';
 
 type MeasureMap = Record<string, { width: number; height: number }>;
 
@@ -30,7 +27,6 @@ export const Ticker = ({
   children,
   textStyle,
   digitWidth = 'per-digit',
-  animation,
 }: TickerProps) => {
   if (children == null) {
     throw Error('provide a number as children e.g. <Ticker>123</Ticker>');
@@ -45,20 +41,18 @@ export const Ticker = ({
     }
   }
   const [currentNumber, setCurrentNumber] = useState<string>(String(children));
-  const [direction, setDirection] = useState<Direction>('up');
   const measureMap = useRef<MeasureMap>({});
   const [digitsMeasured, setDigitsMeasured] = useState(false);
-
-  const digits = useMemo(() => {
-    return currentNumber.split('');
-  }, [currentNumber]);
 
   useEffect(() => {
     if (children !== currentNumber) {
       setCurrentNumber(String(children));
-      setDirection(children > currentNumber ? 'up' : 'down');
     }
   }, [children, currentNumber]);
+
+  const digits = useMemo(() => {
+    return currentNumber.split('');
+  }, [currentNumber]);
 
   const maxDimensions = useMemo(() => {
     if (!digitsMeasured) {
@@ -78,21 +72,23 @@ export const Ticker = ({
         {digitsMeasured &&
           maxDimensions &&
           digits.map((d, index) => (
-            <DigitTicker
+            <DigitTicker3
               textStyle={textStyle}
               measurements={{
                 height: maxDimensions.height,
+                // height: 80,
+                // width: 40,
                 width:
                   digitWidth === 'max-digit-width'
                     ? maxDimensions.width
                     : measureMap.current[d]!.width,
               }}
               key={String(index)}
-              direction={direction}
-              animation={animation}
+              // direction={direction}
+              // animation={animation}
             >
               {parseInt(d, 10)}
-            </DigitTicker>
+            </DigitTicker3>
           ))}
       </View>
 
