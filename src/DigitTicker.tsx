@@ -1,318 +1,205 @@
 import range from 'lodash.range';
-import React, { memo, useEffect, useMemo, useState } from 'react';
-import type { TextStyle } from 'react-native';
-import { Text, View } from 'react-native';
+import React from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { type TextStyle, Text } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  type WithSpringConfig,
-  type WithTimingConfig,
-  withSpring,
   withTiming,
+  type SharedValue,
+  withSpring,
 } from 'react-native-reanimated';
-
-export type Direction = 'up' | 'down';
-
-type TickerBar = {
-  name: string;
-  source: number;
-  target?: number;
-  animating?: boolean;
-  showing?: boolean;
-  numberList: number[];
-};
-
-const getTickerBarInitialTranslation = (
-  tickerBar: TickerBar,
-  cellHeight: number
-): number => {
-  return -tickerBar.numberList.indexOf(tickerBar.source) * cellHeight;
-};
-
-const getTickerBarTargetTranslation = (
-  tickerBar: TickerBar,
-  target: number,
-  direction: Direction,
-  cellHeight: number
-): number => {
-  if (direction === 'up') {
-    return -tickerBar.numberList.indexOf(target) * cellHeight;
-  } else {
-    return (
-      -tickerBar.numberList.findLastIndex((n) => n === target) * cellHeight
-    );
-  }
-};
-
-const getBarNubmersForSourceNumber = (source: number): number[] => {
-  const upper = source + 10;
-  const lower = source - 9;
-
-  return range(lower + 10, upper + 10)
-    .reverse()
-    .map((n) => n % 10);
-};
+import type { AnimationConfig, CellMeasurements } from './types';
 
 export type DigitTickerProps = {
-  children: number;
-  direction: Direction;
-  measurements: { width: number; height: number };
   textStyle?: TextStyle;
-  animation?:
-    | { type: 'timing'; animationConfig: WithTimingConfig }
-    | { type: 'spring'; animationConfig: WithSpringConfig };
+  tickerAnimation?: AnimationConfig;
+  widthAnimation?: AnimationConfig;
+  measurements: CellMeasurements;
+  children: number;
 };
 
 export const DigitTicker = ({
   children,
-  direction,
   measurements,
   textStyle,
-  animation = { type: 'timing', animationConfig: { duration: 700 } },
+  tickerAnimation,
+  widthAnimation,
 }: DigitTickerProps) => {
-  const { height, width } = measurements;
+  const [sourceAndTarget, setSourceAndTarget] = useState<{
+    source: number;
+    target?: number;
+  }>({ source: children });
 
-  const widthSharedValue = useSharedValue(width);
-
-  useEffect(() => {
-    widthSharedValue.value = withTiming(width);
-  }, [width, widthSharedValue]);
-
-  const [tickerBar1, setTickerBar1] = useState<TickerBar>({
-    name: 'bar-1',
-    source: children,
-    numberList: getBarNubmersForSourceNumber(children),
-    showing: true,
-  });
-
-  const [tickerBar2, setTickerBar2] = useState<TickerBar>({
-    name: 'bar-2',
-    source: children,
-    numberList: getBarNubmersForSourceNumber(children),
-    showing: false,
-  });
-
-  const bar1Translate = useSharedValue(
-    getTickerBarInitialTranslation(tickerBar1, height)
-  );
-
-  const bar2Translate = useSharedValue(
-    getTickerBarInitialTranslation(tickerBar2, height)
-  );
-
-  const bar1AnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: bar1Translate.value }],
-    width,
-    opacity: tickerBar1.showing ? 255 : 0,
-    position: 'absolute',
-  }));
-
-  const bar2AnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: bar2Translate.value }],
-    width,
-    opacity: tickerBar2.showing ? 255 : 0,
-    position: 'absolute',
-  }));
-
-  const {
-    getNonShowingBarSetter,
-    getOtherBar,
-    getShowingBar,
-    getShowingBarSetter,
-    setNonShowingBar,
-    setShowingBar,
-  } = useMemo(() => {
-    return {
-      getShowingBar: (): TickerBar => {
-        if (tickerBar1.showing) {
-          return tickerBar1;
-        } else {
-          return tickerBar2;
-        }
-      },
-
-      getOtherBar: (tickerBar: TickerBar) => {
-        if (tickerBar.name === 'bar-1') {
-          return tickerBar2;
-        } else {
-          return tickerBar1;
-        }
-      },
-      getShowingBarSetter: () => {
-        if (tickerBar1.showing) {
-          return setTickerBar1;
-        } else {
-          return setTickerBar2;
-        }
-      },
-      getNonShowingBarSetter: () => {
-        if (!tickerBar1.showing) {
-          return setTickerBar1;
-        } else {
-          return setTickerBar2;
-        }
-      },
-
-      setShowingBar: (showing: boolean, animating: boolean) => {
-        getShowingBarSetter()((bar) => ({
-          ...bar,
-          showing,
-          animating,
-        }));
-      },
-      setNonShowingBar: (showing: boolean) => {
-        getNonShowingBarSetter()((bar) => ({
-          ...bar,
-          showing,
-        }));
-      },
-    };
-  }, [tickerBar1, tickerBar2]);
-
-  const { getTranslation } = useMemo(() => {
-    return {
-      getTranslation: (tickerBarName: string) => {
-        if (tickerBarName === 'bar-1') {
-          return bar1Translate;
-        } else {
-          return bar2Translate;
-        }
-      },
-    };
-  }, [bar1Translate, bar2Translate]);
+  const onReachTarget = () => {
+    setSourceAndTarget((s) => ({
+      source: s.target ?? s.source,
+      target: undefined,
+    }));
+  };
 
   useEffect(() => {
-    console.log('running use effect');
-
-    const showingBar = getShowingBar();
-
-    if (showingBar.animating) {
+    if (sourceAndTarget.source != null && sourceAndTarget.target != null) {
+      // in transition
       return;
+    } else if (children !== sourceAndTarget.source) {
+      setSourceAndTarget((s) => ({ ...s, target: children }));
     }
-
-    if (showingBar.source !== children) {
-      console.log('inside');
-      getShowingBarSetter()((bar) => ({
-        ...bar,
-        target: children,
-        animating: true,
-      }));
-
-      getTranslation(getOtherBar(showingBar).name).value =
-        getTickerBarInitialTranslation(getOtherBar(showingBar), height);
-
-      getNonShowingBarSetter()((bar) => ({
-        ...bar,
-        showing: false,
-        source: children,
-        numberList: getBarNubmersForSourceNumber(children),
-      }));
-
-      // setTimeout(() => {
-      if (animation.type === 'spring') {
-        getTranslation(showingBar.name).value = withSpring(
-          getTickerBarTargetTranslation(
-            showingBar,
-            children,
-            direction,
-            height
-          ),
-          animation.animationConfig,
-          () => {
-            runOnJS(setNonShowingBar)(true);
-            runOnJS(setShowingBar)(false, false);
-          }
-        );
-      } else {
-        getTranslation(showingBar.name).value = withTiming(
-          getTickerBarTargetTranslation(
-            showingBar,
-            children,
-            direction,
-            height
-          ),
-          animation.animationConfig,
-          () => {
-            runOnJS(setNonShowingBar)(true);
-            runOnJS(setShowingBar)(false, false);
-          }
-        );
-      }
-      // }, 0);
-    }
-  }, [
-    children,
-    animation,
-    direction,
-    getNonShowingBarSetter,
-    getOtherBar,
-    getShowingBar,
-    getShowingBarSetter,
-    getTranslation,
-    height,
-    setNonShowingBar,
-    setShowingBar,
-  ]);
-
-  // const containerAnimatedStyle = useAnimatedStyle(() => ({
-  //   height,
-  //   width: widthSharedValue.value,
-  //   overflow: 'hidden',
-  // }));
+  }, [children, sourceAndTarget]);
 
   return (
-    <View
-      style={{
-        height: height,
-        width: measurements.width,
-        overflow: 'hidden',
-      }}
-      // style={containerAnimatedStyle}
-    >
-      <Animated.View style={bar1AnimatedStyle}>
-        <Bar
-          numberList={tickerBar1.numberList}
-          height={height}
-          textStyle={textStyle}
-        />
-      </Animated.View>
-
-      <Animated.View style={bar2AnimatedStyle}>
-        <Bar
-          numberList={tickerBar2.numberList}
-          height={height}
-          textStyle={textStyle}
-        />
-      </Animated.View>
-    </View>
+    <TickerBar
+      source={sourceAndTarget.source}
+      target={sourceAndTarget.target}
+      measurements={measurements}
+      onReachedTarget={onReachTarget}
+      textStyle={textStyle}
+      tickerAnimation={tickerAnimation}
+      widthAnimation={widthAnimation}
+    />
   );
 };
 
-type BarProps = {
+type TickerBarProps = {
+  source: number;
+  target?: number;
+  measurements: CellMeasurements;
+  tickerAnimation?: AnimationConfig;
+  widthAnimation?: AnimationConfig;
   textStyle?: TextStyle;
-  numberList: number[];
+  onReachedTarget?: () => void;
+};
+
+const getNumbersList = (source: number, target: number): number[] => {
+  const upper = (target < source ? target + 10 : target) + 1;
+  const lower = source;
+
+  return range(lower + 10, upper + 10).map((n) => n % 10);
+};
+
+export const TickerBar = ({
+  source,
+  onReachedTarget,
+  target,
+  measurements,
+  textStyle,
+  tickerAnimation = { type: 'spring', animationConfig: { mass: 0.4 } },
+  widthAnimation = { type: 'spring', animationConfig: { mass: 0.4 } },
+}: TickerBarProps) => {
+  const { cellHeight, cellWidth } = measurements;
+
+  const translationSharedValue = useSharedValue(0);
+  const widthSharedValue = useSharedValue(cellWidth);
+
+  const numberList = useMemo(() => {
+    if (target == null) {
+      return [source];
+    } else {
+      return getNumbersList(source, target);
+    }
+  }, [source, target]);
+
+  const targetReached = () => {
+    onReachedTarget?.();
+  };
+
+  useEffect(() => {
+    translationSharedValue.value = 0;
+
+    if (tickerAnimation.type === 'spring') {
+      translationSharedValue.value = withSpring(
+        cellHeight * (numberList.length - 1),
+        tickerAnimation.animationConfig,
+        () => {
+          runOnJS(targetReached)();
+        }
+      );
+    } else {
+      translationSharedValue.value = withTiming(
+        cellHeight * (numberList.length - 1),
+        tickerAnimation.animationConfig,
+        () => {
+          runOnJS(targetReached)();
+        }
+      );
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numberList]);
+
+  useEffect(() => {
+    if (widthAnimation.type === 'timing') {
+      widthSharedValue.value = withTiming(
+        cellWidth,
+        widthAnimation.animationConfig
+      );
+    } else {
+      widthSharedValue.value = withSpring(
+        cellWidth,
+        widthAnimation.animationConfig
+      );
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cellWidth]);
+
+  const containerStyle = useAnimatedStyle(() => ({
+    width: widthSharedValue.value,
+    height: cellHeight,
+    overflow: 'hidden',
+    borderColor: 'red',
+    borderWidth: 0,
+  }));
+
+  return (
+    <Animated.View style={containerStyle}>
+      {numberList.map((i, index) => (
+        <Cell
+          key={'cell-' + i}
+          text={i}
+          index={index}
+          height={cellHeight}
+          translationSharedValue={translationSharedValue}
+          textStyle={textStyle}
+        />
+      ))}
+    </Animated.View>
+  );
+};
+
+type CellProps = {
+  index: number;
+  translationSharedValue: SharedValue<number>;
+  text: number;
+  textStyle?: TextStyle;
   height: number;
 };
-const Bar = memo(
-  ({ numberList, textStyle, height }: BarProps) => {
-    console.log('rendering number list');
-    return (
-      <>
-        {numberList.map((i, index) => (
-          <View
-            key={'bar' + index}
-            style={{
-              height,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={textStyle}>{i}</Text>
-          </View>
-        ))}
-      </>
-    );
-  },
-  (prev, next) => prev.numberList[0] === next.numberList[0]
-);
+
+const Cell = ({
+  index,
+  translationSharedValue,
+  text,
+  textStyle,
+  height,
+}: CellProps) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: translationSharedValue.value - index * height,
+        },
+      ],
+      height: '100%',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+    };
+  });
+  return (
+    <Animated.View style={animatedStyle}>
+      <Text style={textStyle}>{text}</Text>
+    </Animated.View>
+  );
+};

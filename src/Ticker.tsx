@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { type DigitTickerProps } from './DigitTicker';
 import { Text, View } from 'react-native';
 import range from 'lodash.range';
-import type { TextStyle } from 'react-native';
-import { DigitTicker3 } from './DigitTicker3';
+import { DigitTicker, type DigitTickerProps } from './DigitTicker';
 
 type MeasureMap = Record<string, { width: number; height: number }>;
 
-type TickerProps = Pick<DigitTickerProps, 'animation'> & {
+type TickerProps = Pick<
+  DigitTickerProps,
+  'textStyle' | 'tickerAnimation' | 'widthAnimation'
+> & {
   children: string | number;
 
   /**
@@ -19,14 +20,14 @@ type TickerProps = Pick<DigitTickerProps, 'animation'> & {
    * max-digit-width: All digits take the width of the widest digit, this makes widths of strings with same length the same.
    */
   digitWidth?: 'per-digit' | 'max-digit-width';
-
-  textStyle?: TextStyle;
 };
 
 export const Ticker = ({
   children,
   textStyle,
   digitWidth = 'per-digit',
+  tickerAnimation,
+  widthAnimation,
 }: TickerProps) => {
   if (children == null) {
     throw Error('provide a number as children e.g. <Ticker>123</Ticker>');
@@ -72,23 +73,21 @@ export const Ticker = ({
         {digitsMeasured &&
           maxDimensions &&
           digits.map((d, index) => (
-            <DigitTicker3
+            <DigitTicker
               textStyle={textStyle}
               measurements={{
-                height: maxDimensions.height,
-                // height: 80,
-                // width: 40,
-                width:
+                cellHeight: maxDimensions.height,
+                cellWidth:
                   digitWidth === 'max-digit-width'
                     ? maxDimensions.width
                     : measureMap.current[d]!.width,
               }}
               key={String(index)}
-              // direction={direction}
-              // animation={animation}
+              tickerAnimation={tickerAnimation}
+              widthAnimation={widthAnimation}
             >
               {parseInt(d, 10)}
-            </DigitTicker3>
+            </DigitTicker>
           ))}
       </View>
 
