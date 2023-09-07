@@ -24,7 +24,7 @@ export default function App() {
           }}
           key={i}
         >
-          17986
+          35
         </Ticker>
       ))}
     </ScrollView>

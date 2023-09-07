@@ -1,6 +1,6 @@
 {
   "name": "@hmodarres/react-native-ticker",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "private": false,
   "description": "A ticker component for React Native",
   "main": "lib/commonjs/index",

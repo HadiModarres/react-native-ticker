@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import range from 'lodash.range';
 import { DigitTicker, type DigitTickerProps } from './DigitTicker';
+import { isDigit } from './utils';
 
 type MeasureMap = Record<string, { width: number; height: number }>;
 
@@ -9,7 +10,7 @@ type TickerProps = Pick<
   DigitTickerProps,
   'textStyle' | 'tickerAnimation' | 'widthAnimation'
 > & {
-  children: string | number;
+  children: string | number | null | undefined;
 
   /**
    * @param {string} digitWidth Specifies the width of each digit.
@@ -29,31 +30,15 @@ export const Ticker = ({
   tickerAnimation,
   widthAnimation,
 }: TickerProps) => {
-  if (children == null) {
-    throw Error('provide a number as children e.g. <Ticker>123</Ticker>');
-  }
-  if (typeof children === 'string') {
-    if (!/^\d+$/.test(children)) {
-      throw Error('react-native-ticker only accepts integers at the moment');
-    }
-  } else {
-    if (!Number.isInteger(children)) {
-      throw Error('react-native-ticker only accepts integers at the moment');
-    }
-  }
-  const [currentNumber, setCurrentNumber] = useState<string>(String(children));
   const measureMap = useRef<MeasureMap>({});
   const [digitsMeasured, setDigitsMeasured] = useState(false);
 
-  useEffect(() => {
-    if (children !== currentNumber) {
-      setCurrentNumber(String(children));
+  const characters = useMemo(() => {
+    if (children == null) {
+      return children;
     }
-  }, [children, currentNumber]);
-
-  const digits = useMemo(() => {
-    return currentNumber.split('');
-  }, [currentNumber]);
+    return String(children).split('');
+  }, [children]);
 
   const maxDimensions = useMemo(() => {
     if (!digitsMeasured) {
@@ -68,38 +53,48 @@ export const Ticker = ({
   }, [digitsMeasured]);
 
   return (
-    <View>
+    <View collapsable={false}>
       <View style={{ flexDirection: 'row' }}>
         {digitsMeasured &&
           maxDimensions &&
-          digits.map((d, index) => (
-            <DigitTicker
-              textStyle={textStyle}
-              measurements={{
-                cellHeight: maxDimensions.height,
-                cellWidth:
-                  digitWidth === 'max-digit-width'
-                    ? maxDimensions.width
-                    : measureMap.current[d]!.width,
-              }}
-              key={String(index)}
-              tickerAnimation={tickerAnimation}
-              widthAnimation={widthAnimation}
-            >
-              {parseInt(d, 10)}
-            </DigitTicker>
-          ))}
+          characters &&
+          characters.map((d, index) =>
+            isDigit(d) ? (
+              <DigitTicker
+                textStyle={textStyle}
+                measurements={{
+                  cellHeight: maxDimensions.height,
+                  cellWidth:
+                    digitWidth === 'max-digit-width'
+                      ? maxDimensions.width
+                      : measureMap.current[d]!.width,
+                }}
+                key={String(index)}
+                tickerAnimation={tickerAnimation}
+                widthAnimation={widthAnimation}
+              >
+                {parseInt(d, 10)}
+              </DigitTicker>
+            ) : (
+              <Text key={String(index)} style={textStyle}>
+                {d}
+              </Text>
+            )
+          )}
       </View>
 
-      <View style={{ opacity: 0, position: 'absolute', top: 1e5 }}>
+      <View
+        collapsable={false}
+        style={{
+          opacity: 0,
+          position: 'absolute',
+          top: 1e4,
+          alignItems: 'flex-start',
+        }}
+      >
         {range(0, 10).map((digit) => (
           <Text
-            style={[
-              {
-                marginRight: 'auto',
-              },
-              textStyle,
-            ]}
+            style={textStyle}
             key={digit}
             onLayout={(event) => {
               const { width, height } = event.nativeEvent.layout;
